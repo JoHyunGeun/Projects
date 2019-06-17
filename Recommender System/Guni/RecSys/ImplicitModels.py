@@ -42,7 +42,9 @@ class ImplicitModels:
         sparse_matrix = self.get_sparse_matrix(TrainSet)
         self.model.fit(sparse_matrix)
         topN = defaultdict(list)
-        for iuid in TrainSet.ur:
+        for iuid in self.FullTrainSet.ur:
+            if n == 'all':
+                n = self.n_item
             predictions = self.model.recommend(iuid, sparse_matrix.T, N=n)
             for iiid, rating in predictions:
                 ruid = self.FullTrainSet.to_raw_uid(iuid)
@@ -67,12 +69,16 @@ class ImplicitModels:
         seen.sort(key=lambda x: x[1], reverse=True)
         return seen[:n]
 
-    def eval(self, n=10, doTopN=True):
-        metrics = {}
-        if doTopN:
-            LOOCVTrainSet = self.eval_data.GetLOOCVTrainSet()
-            LOOCVTestSet = self.eval_data.GetLOOCVTestSet()
-            TopN = self.topN_all(train=LOOCVTrainSet)
-            metrics['HitRate'] = RecommenderMetrics.HitRate(TopN, LOOCVTestSet)
+    def hit_rate(self):
+        LOOCVTrainSet = self.eval_data.GetLOOCVTrainSet()
+        LOOCVTestSet = self.eval_data.GetLOOCVTestSet()
+        TopN = self.topN_all(train=LOOCVTrainSet)
+        hit_rate = RecommenderMetrics.HitRate(TopN, LOOCVTestSet)
 
-        return metrics
+        return hit_rate
+
+    def rank_rate(self):
+        TrainSet = self.eval_data.GetTrainSet()
+        TestSet = self.eval_data.GetTestSet()
+        AllPredicted = self.topN_all(n='all', train=TrainSet)
+        return RecommenderMetrics.RankBar(AllPredicted, TestSet)

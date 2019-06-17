@@ -40,3 +40,19 @@ class RecommenderMetrics:
 
             total += 1
         return hits/total
+
+    def RankBar(AllPredicted, TestSet):
+        sum_rating_rank = 0
+        sum_rating = 0
+
+        for ruid, riid, rating in TestSet:
+            sum_rating += rating
+            anti_num = len(AllPredicted[ruid])
+            rank = 0
+            for i, item_rating in enumerate(AllPredicted[ruid]):
+                if riid == item_rating[0]:
+                    rank = i
+                    break
+            rank_ui = rank / anti_num
+            sum_rating_rank += (rating * rank_ui)
+        return sum_rating_rank / sum_rating
